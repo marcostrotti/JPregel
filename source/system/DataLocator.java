@@ -9,12 +9,15 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
 import exceptions.DataNotFoundException;
-
 import utility.JPregelLogger;
 import utility.Pair;
 
@@ -93,6 +96,7 @@ public class DataLocator {
 	 */
 	public static DataLocator getDataLocator(int partitionSize)
 			throws IOException {
+		System.out.println("DataLocator host name "+InetAddress.getLocalHost().getHostName());
 		if (aDataLocator == null) {
 			aDataLocator = new DataLocator(partitionSize);
 		}
@@ -172,11 +176,14 @@ public class DataLocator {
 			throws IOException, DataNotFoundException {
 		BufferedWriter buffWriter = new BufferedWriter(new FileWriter(
 				getPartitionMap()));
+		System.out.println("Partition file "+ getPartitionMap());
 		for (Map.Entry<Integer, Pair<String, String>> e : partitionWkrMgrMap
 				.entrySet()) {
 			Pair<String, String> aPair = e.getValue();
 			String wkrMgrName = aPair.getFirst();
 			String wkrMgrHostName = aPair.getSecond();
+			System.out.println("Saving map " + e.getKey() + PARTITION_WKRMGR_SEP + wkrMgrName
+					+ WKRMGR_HOSTNAME_SEP + wkrMgrHostName);
 			buffWriter.write(e.getKey() + PARTITION_WKRMGR_SEP + wkrMgrName
 					+ WKRMGR_HOSTNAME_SEP + wkrMgrHostName + "\n");
 		}

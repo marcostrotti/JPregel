@@ -17,7 +17,7 @@
     <property name="port" value="3672"/>
     
     <!-- host names -->
-    <property name="host1" value="dudley.cs.ucsb.edu"/>
+	<!--<property name="host1" value="dudley.cs.ucsb.edu"/>
     <property name="host2" value="blondie.cs.ucsb.edu"/>
     <property name="host3" value="lisa.cs.ucsb.edu"/>
     <property name="host4" value="butthead.cs.ucsb.edu"/>
@@ -32,9 +32,10 @@
     <property name="host13" value="beavis.cs.ucsb.edu"/>
     <property name="host14" value="brain.cs.ucsb.edu"/>
     <property name="host15" value="bugs.cs.ucsb.edu"/>
-    <property name="host16" value="linus.cs.ucsb.edu"/>
+    <property name="host16" value="linus.cs.ucsb.edu"/>-->
     
-    <property name="master" value="snoopy.cs.ucsb.edu"/>
+    <property name="host1" value="host1"/>
+    <property name="master" value="host2"/>
     
     <target name="clean" description="clean up">
         <!-- Delete the ${build} and ${dist} directory trees -->
@@ -133,7 +134,7 @@
         
         <!-- run worker manager in remote hosts -->
         <parallel>
-            <sshexec host="${host1}" username="${username}" keyfile="/cs/student/${username}/.ssh/headless_rsa" trust="true" command="cd /cs/student/${username}/${jpregel_folder}/; ant runWkrManager -Dvertex_class=${vertex_class} -Dapp=${app}" passphrase=""/>
+            <sshexec host="${host1}" username="${username}" keyfile="/home/${username}/.ssh/tesis" trust="true" command="cd /home/${username}/${jpregel_folder}/; ant runWkrManager -Dvertex_class=${vertex_class} -Dapp=${app}" passphrase=""/>
         </parallel>
     </target>
     
@@ -196,6 +197,14 @@
             
         </parallel>
     </target>
+	
+	<target name="killtesting" description="kills java processes in all remote machines started through ssh">
+	        <!-- kill java processes in remote hosts -->
+	        <parallel>
+	            <sshexec host="${host1}" username="${username}" keyfile="/home/${username}/.ssh/tesis" trust="true" command="killall java" passphrase=""/>
+	            <sshexec host="${master}" username="${username}" keyfile="/home/${username}/.ssh/tesis" trust="true" command="killall java" passphrase=""/>
+	        </parallel>
+	    </target>
     
     
     <target name="runLocalMaster" depends="build_jpregel" description="starts master locally">
@@ -217,7 +226,7 @@
     <target name="runRemoteMaster" depends="build_jpregel" description="starts master remotely  through ssh">
         
         <!-- run master in remote hosts -->
-        <sshexec host="${master}" username="${username}" keyfile="/cs/student/${username}/.ssh/headless_rsa" trust="true" command="cd /cs/student/${username}/${jpregel_folder}/; ant runMaster -Dusername=${username} -Dapp=${app} -Dvertex_class=${vertex_class} -Dnum_machines=${num_machines}" passphrase=""/>
+        <sshexec host="${master}" username="${username}" keyfile="/home/${username}/.ssh/tesis" trust="true" command="cd /home/${username}/${jpregel_folder}/; ant runMaster -Dusername=${username} -Dapp=${app} -Dvertex_class=${vertex_class} -Dnum_machines=${num_machines}" passphrase=""/>
         
         
     </target>

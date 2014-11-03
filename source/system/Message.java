@@ -36,6 +36,7 @@ public class Message implements Serializable {
 		return destVertexID;
 	}
 	
+	//TODO: generalize
 	private double msgValue;
 	
 	/**

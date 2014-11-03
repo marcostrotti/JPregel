@@ -95,7 +95,6 @@ public class GraphPartitioner {
 
 		// Average no. of lines in a graph partition
 		this.setPartitionSize(numThreads * numWorkers);
-
 		// number of lines in the input graph
 		setNumVertices(this.countLines());
 
@@ -113,7 +112,6 @@ public class GraphPartitioner {
 	 * @return
 	 */
 	private String getId() {
-		// TODO Auto-generated method stub
 		return "GraphPartitioner";
 	}
 
@@ -170,7 +168,8 @@ public class GraphPartitioner {
 						+ newPartitionFile);
 				newPartition.writeToFile(newPartitionFile);
 				listOfPartitions.add(newPartition);
-				newPartition.freePartition();
+				
+				//newPartition.freePartition();
 			}
 			if (line == null) {
 				logger.info("Breaking because no lines are left");
@@ -202,4 +201,22 @@ public class GraphPartitioner {
 		return count;
 	}
 
+	/**
+	 * 
+	 * @return list with all generated Graph Partitions
+	 * 
+	 */
+	public List<GraphPartition> getPartitions(){
+		return this.listOfPartitions;
+	}
+	
+	/**
+	 * Given a partition identifier paritionID, return a GraphPartition
+	 * @param patitionID 
+	 * @return return a partition
+	 */
+	public GraphPartition getPartition(int partitionID){
+		return this.listOfPartitions.get(partitionID); 
+	}
+	
 }

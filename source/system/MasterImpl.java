@@ -7,6 +7,7 @@ import exceptions.DataNotFoundException;
 import exceptions.IllegalClassException;
 import exceptions.IllegalInputException;
 import exceptions.NoResourcesException;
+import graphs.GraphPartition;
 import graphs.GraphPartitioner;
 
 import java.io.IOException;
@@ -22,7 +23,6 @@ import java.util.logging.Logger;
 
 import utility.JPregelLogger;
 import utility.Pair;
-
 import api.Vertex;
 
 /**
@@ -225,8 +225,7 @@ public class MasterImpl extends UnicastRemoteObject implements ManagerToMaster,
 		this.idManagerMap = new HashMap<String, WorkerManager>();
 		this.superstepExecutorThread = new Thread(this, getId());
 		this.aFaultDetector = new FaultDetector();
-		this.faultDetectorThread = new Thread(this.aFaultDetector,
-				this.aFaultDetector.getID());
+		this.faultDetectorThread = new Thread(this.aFaultDetector,this.aFaultDetector.getID());
 
 	}
 
@@ -262,6 +261,7 @@ public class MasterImpl extends UnicastRemoteObject implements ManagerToMaster,
 	public synchronized void register(WorkerManager aWorkerManager, String id)
 			throws RemoteException {
 		this.idManagerMap.put(id, aWorkerManager);
+		System.out.println("registered worker manager : " + id);
 		logger.info("registered worker manager : " + id);
 		logger.info("size of map : " + idManagerMap.size());
 
@@ -286,7 +286,7 @@ public class MasterImpl extends UnicastRemoteObject implements ManagerToMaster,
 			}
 
 		} catch (ClassNotFoundException e) {
-			System.err.println("Client vertex class not found !");
+			System.err.println("Client vertex class ["+vertexClassName+"] not found !");
 			e.printStackTrace();
 			return;
 		}
@@ -329,6 +329,7 @@ public class MasterImpl extends UnicastRemoteObject implements ManagerToMaster,
 
 	public void executeTask() throws RemoteException {
 		try {
+			System.out.println("Particionando grafo ");
 			this.gp = new GraphPartitioner(JPregelConstants.GRAPH_FILE, this,
 					this.getVertexClassName());
 		} catch (IOException e) {
@@ -579,10 +580,10 @@ public class MasterImpl extends UnicastRemoteObject implements ManagerToMaster,
 		int numPartitions = this.gp.partitionGraphs();
 		logger.info("Num partitions : " + numPartitions);
 		List<List<Integer>> assignedPartitions = this.assignPartitions();
-		Map<Integer, Pair<String, String>> partitionWkrMgrMap = this
-				.getPartitionMap(assignedPartitions);
-		this.initializeWorkerManagers(assignedPartitions);
-
+		Map<Integer, Pair<String, String>> partitionWkrMgrMap = this.getPartitionMap(assignedPartitions);
+		System.out.println("Initializwe Worker Managers assigned  "+assignedPartitions);
+		this.initializeWorkerManagers(assignedPartitions, partitionWkrMgrMap);
+		System.out.println("End Initialize Worker Managers assigned  "+assignedPartitions);
 		// Write partition - worker manager map to file
 		DataLocator dl = DataLocator.getDataLocator(gp.getPartitionSize());
 		dl.writePartitionMap(partitionWkrMgrMap);
@@ -610,17 +611,31 @@ public class MasterImpl extends UnicastRemoteObject implements ManagerToMaster,
 		return partitionWkrMgrMap;
 	}
 
-	private void initializeWorkerManagers(List<List<Integer>> assignedPartitions)
+	private void initializeWorkerManagers(List<List<Integer>> assignedPartitions,Map<Integer, Pair<String, String>> partitionWkrMgrMap)
 			throws RemoteException {
 		int index = 0;
 		WorkerManager thisWkrMgr = null;
-
+		System.out.println("Initialize work managers ");
 		for (Map.Entry<String, WorkerManager> e : this.idManagerMap.entrySet()) {
 			thisWkrMgr = e.getValue();
 			List<Integer> thisWkrMgrPartitions = assignedPartitions.get(index);
-			thisWkrMgr.initialize(thisWkrMgrPartitions,
-					this.getWorkerMgrThreads(), this.gp.getPartitionSize(),
-					this.gp.getNumVertices());
+			//Get In Memory Representation of Partition
+			List<GraphPartition> graphParitions= new Vector<GraphPartition>();
+			for (int partitionID : thisWkrMgrPartitions){
+				graphParitions.add(this.gp.getPartition(partitionID));
+			}
+			//try {
+			logger.info("Initialize Worker Manager " + thisWkrMgr.getId());
+			thisWkrMgr.initialize(graphParitions, this.getWorkerMgrThreads(), 
+					this.gp.getPartitionSize(), this.gp.getNumVertices(), partitionWkrMgrMap );
+			// Free partitions cache
+			for (GraphPartition part : graphParitions)
+				part.freePartition();
+			logger.info("End initialize Worker Manager " + thisWkrMgr.getId());
+			/*} catch (IOException e1) {
+				e1.printStackTrace();
+				System.out.println("Master Data Locator Error " + e1.getMessage());
+			}*/
 			index++;
 		}
 	}
@@ -629,15 +644,13 @@ public class MasterImpl extends UnicastRemoteObject implements ManagerToMaster,
 			IOException, IllegalInputException, DataNotFoundException,
 			InstantiationException, IllegalAccessException,
 			ClassNotFoundException {
+		
 		if (idManagerMap.size() == 0) {
-			throw new NoResourcesException(
-					"No worker managers available to the Master for queueing jobs");
+			throw new NoResourcesException("No worker managers available to the Master for queueing jobs");
 		}
 		logger.info(idManagerMap.toString());
 
 		List<List<Integer>> assignedPartitions = new Vector<List<Integer>>();
-
-		
 
 		int numMgrPartitions = this.gp.getNumberOfPartitions() / this.getWorkerMgrsCount();
 		List<Integer> wkrMgrPartitions = new Vector<Integer>();
@@ -645,6 +658,8 @@ public class MasterImpl extends UnicastRemoteObject implements ManagerToMaster,
 		WorkerManager thisWkrMgr = null;
 		for (Map.Entry<String, WorkerManager> e : this.idManagerMap.entrySet()) {
 			if (thisWkrMgr != null) {
+				System.out.println("Generating partitions for worker manager : "
+						+ thisWkrMgr.getId() + " -> " + wkrMgrPartitions);
 				logger.info("Generating partitions for worker manager : "
 						+ thisWkrMgr.getId() + " -> " + wkrMgrPartitions);
 				assignedPartitions.add(wkrMgrPartitions);
@@ -657,7 +672,8 @@ public class MasterImpl extends UnicastRemoteObject implements ManagerToMaster,
 			}
 			logger.info("End of loop : " + wkrMgrPartitions);
 		}
-
+		
+		//Assign the remaining Partitions to last WorkerManager 
 		while (partitionCount < this.gp.getNumberOfPartitions()) {
 			wkrMgrPartitions.add(partitionCount);
 			partitionCount++;
@@ -710,7 +726,7 @@ public class MasterImpl extends UnicastRemoteObject implements ManagerToMaster,
 	}
 
 	/**
-	 * @param b
+	 * @param allDone
 	 */
 	private synchronized void setAllDone(boolean allDone) {
 		this.allDone = allDone;

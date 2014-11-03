@@ -61,7 +61,6 @@ public class GraphPartition implements Serializable {
 			strBuf.append("\n");
 		}
 		return strBuf.toString();
-
 	}
 
 	/**
@@ -163,12 +162,10 @@ public class GraphPartition implements Serializable {
 	public void writeToFile(String outputFile) throws IOException {
 		BufferedWriter buffWriter = new BufferedWriter(new FileWriter(
 				outputFile));
-
 		for (Vertex v : listOfVertices) {
 			String vertexStr = v.toString();
 			buffWriter.write(vertexStr + "\n");
 		}
-
 		buffWriter.close();
 
 	}

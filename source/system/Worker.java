@@ -119,10 +119,13 @@ public class Worker implements Runnable {
 		this(mgr, vertexClassName, partitionSize, aCommunicator, numVertices);
 		logger.info("Worker : " + this.getId() + " received partitions : "
 				+ partitionNumers);
+		//TODO: FROM HERE
 		DataLocator aDataLocator = DataLocator.getDataLocator(partitionSize);
 		for (Integer partitionNumber : partitionNumers) {
+			System.out.println("DataLocator searching for partition " + partitionNumber);
 			String partitionFile = aDataLocator
 					.getPartitionFile(partitionNumber);
+			System.out.println("GraphParition partition " + partitionNumber + " storage in file "+partitionFile);
 			GraphPartition aGraphPartition = new GraphPartition(
 					partitionNumber, partitionFile, this.vertexClassName, this,
 					aDataLocator);

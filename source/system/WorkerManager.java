@@ -3,14 +3,22 @@
  */
 package system;
 
+import graphs.GraphPartition;
+
 import java.rmi.RemoteException;
 import java.util.List;
+import java.util.Map;
+
+import utility.Pair;
 
 /**
  * Models a remote worker manager executing on any machine in the cluster. Each
  * such manager controls a set of Worker threads and reports to a remote master.
  * The manager also collects incoming messages during the 'Communication' stage
  * of the 'Bulk Synchronous Parallel Model'.
+ * 
+ * @author Marcos Héctor Trotti
+ * 
  * 
  * @author Manasa Chandrasekhar
  * @author Kowshik Prakasam
@@ -43,13 +51,34 @@ public interface WorkerManager extends java.rmi.Remote {
 	 *            Number of workers that can be started by this worker manager
 	 * @param partitionSize
 	 *            Size of every graph partition (number of lines)
-	 * @param totalVertices
+	 * @param numVertices
 	 *            Total number of vertices in the input graph
 	 * @throws RemoteException
-	 */
+	
 	void initialize(List<Integer> partitionNumbers, int numWorkers,
-			int partitionSize, int totalVertices) throws RemoteException;
+			int partitionSize, int numVertices) throws RemoteException;
 
+	 */
+	
+	/**
+	 * Used by the Master to initialize the worker manager with graph partitions
+	 * and other details about the input graph, before the first superstep is
+	 * executed.
+	 * 
+	 * @param partitions	
+	 * 				List of partition assigned to this Worker Manager 
+	 * @param numWorkers
+	 *            Number of workers that can be started by this worker manager
+	 * @param partitionSize
+	 *            Size of every graph partition (number of lines)
+	 * @param numVertices
+	 *            Total number of vertices in the input graph
+	 * @throws RemoteException
+	 * 
+	 */
+	void initialize(List<GraphPartition> partitions, int numWorkers,
+			int partitionSize, int numVertices, Map<Integer, Pair<String, String>> partitionMap) throws RemoteException;
+	
 	/**
 	 * Commences a particular superstep in the worker manager
 	 * 

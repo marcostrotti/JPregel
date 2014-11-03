@@ -168,7 +168,7 @@ public class Communicator implements Runnable {
 						logger.severe("DataNotFoundException occured in communicate()");
 						e.printStackTrace();
 					} catch (IOException e) {
-						logger.severe("IOException occured in communicate()");
+						logger.severe("IOException occured in communicate() "+ e.getMessage());
 						e.printStackTrace();
 					} catch (NotBoundException e) {
 						logger.severe("NotBoundException occured in communicate()");
@@ -191,9 +191,11 @@ public class Communicator implements Runnable {
 	 */
 	private void communicate() throws IOException, DataNotFoundException,
 			NotBoundException, RemoteException, UnknownHostException {
-
+		logger.info("cleaning spooler queues");
 		clearSpoolerQueues();
+		logger.info("populating spooler queues");
 		populateSpoolerQueues();
+		logger.info("send messages queues");
 		sendMessages();
 		stopWorkers();
 		logger.info("Ending superstep");

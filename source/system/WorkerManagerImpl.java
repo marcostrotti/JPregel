@@ -25,11 +25,13 @@ import java.util.logging.Logger;
 import system.Communicator.CommunicatorState;
 import system.Worker.WorkerState;
 import utility.JPregelLogger;
+import utility.Pair;
 import api.Vertex;
 import exceptions.DataNotFoundException;
 import exceptions.IllegalClassException;
 import exceptions.IllegalInputException;
 import exceptions.IllegalMessageException;
+import graphs.GraphPartition;
 
 /**
  * 
@@ -179,36 +181,63 @@ public class WorkerManagerImpl extends UnicastRemoteObject implements
 	 * @see system.WorkerManager#initialize(java.util.List)
 	 */
 	@Override
-	public void initialize(List<Integer> partitionNumbers, int numWorkers,
-			int partitionSize, int numVertices) throws RemoteException {
-		logger.info("Received partitionNumbers : " + partitionNumbers);
+	public void initialize(List<GraphPartition> partitions, int numWorkers,
+			int partitionSize, int numVertices,Map<Integer, Pair<String, String>> partitionMap){
+		System.out.println("Received partitionNumbers : " + partitions);
+		logger.info("Received partitionNumbers : " + partitions);
+		
 		this.setNumWorkers(numWorkers);
-
+		System.out.println("Set num Workers : " + numWorkers);
 		// Set datalocator in communicator
 		DataLocator aDataLocator = null;
 		try {
+			//
 			aDataLocator = DataLocator.getDataLocator(partitionSize);
+			aDataLocator.writePartitionMap(partitionMap);
+			this.getCommunicator().setDataLocator(aDataLocator);
 		} catch (IOException e) {
 			String msg = "RemoteException in DataLocator in worker manager : "
 					+ this.getId();
 			logger.severe(msg);
 			e.printStackTrace();
-			throw new RemoteException(msg, e);
+		} catch (DataNotFoundException e) {
+			logger.severe("RemoteException in DataLocator in worker manager : "	+ this.getId());
+			e.printStackTrace();
 		}
-		this.getCommunicator().setDataLocator(aDataLocator);
-
+		
+		// Locally storage assigned partitions
+		List<Integer> partitionNumbers=new Vector<Integer>();
+		for(GraphPartition partition : partitions){
+			try {
+				partition.setDataLocator(aDataLocator);
+				partition.writeToFile(aDataLocator.getPartitionFile(partition.getPartitionID()));
+			} catch (IOException e) {
+				logger.severe("Error writing partition "+ partition.getPartitionID() +" to file "+ e.getMessage());
+				e.printStackTrace();
+			} catch (DataNotFoundException e) {
+				logger.severe("Error writing partition "+ partition.getPartitionID() +" to file "+ e.getMessage());
+				e.printStackTrace();
+			}
+			partitionNumbers.add(partition.getPartitionID());
+		}
+		
+		System.out.println("this.getCommunicator().setDataLocator " + partitionSize);
 		// assign partitions to workers
 		List<List<Integer>> assignedPartitions = this
 				.assignPartitions(partitionNumbers);
-
 		// for each assigned partition, initialize the worker
 		for (List<Integer> threadPartition : assignedPartitions) {
-
 			try {
+				System.out.println("assigned partition, initialize the worker " + threadPartition);
 				Worker aWkr = new Worker(threadPartition, partitionSize, this,
 						vertexClassName, this.getCommunicator(), numVertices);
+				System.out.println("Create worker " + assignedPartitions);
 				this.getCommunicator().registerWorker(aWkr);
+				System.out.println("Register worker " + assignedPartitions);
 				this.idVertexMap.putAll(aWkr.getVertices());
+				System.out.println("worker get vertices " + assignedPartitions);
+				System.out.println("Cached all vertices of this worker. Size of id->vertex map is : "
+						+ this.idVertexMap.size());
 				logger.info("Cached all vertices of this worker. Size of id->vertex map is : "
 						+ this.idVertexMap.size());
 				this.workers.add(aWkr);
@@ -239,6 +268,8 @@ public class WorkerManagerImpl extends UnicastRemoteObject implements
 				e.printStackTrace();
 			}
 		}
+		System.out.println("Initialized worker manager : " + this.getId()
+		+ "\n\n Workers are : " + workers);
 		logger.info("Initialized worker manager : " + this.getId()
 				+ "\n\n Workers are : " + workers);
 	}

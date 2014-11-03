@@ -17,6 +17,7 @@ import java.io.Serializable;
 public class Pair<A,B> implements Serializable {
 
 	private static final long serialVersionUID = 1685795769196233024L;
+	
 	private A o1;
 	private B o2;
 
@@ -24,9 +25,6 @@ public class Pair<A,B> implements Serializable {
 		this.o1 = o1;
 		this.o2 = o2;
 	}
-
-	
-	
 
 	public A getFirst() {
 		return o1;
@@ -46,19 +44,13 @@ public class Pair<A,B> implements Serializable {
 
 	@Override
 	public boolean equals(Object obj) {
-	
 		Pair p=(Pair)obj;
 		return p.o1.equals(this.o1) && p.o2.equals(this.o2);
 	}
 
-	
 	@Override
 	public String toString() {
 		return "Pair{" + o1 + ", " + o2 + "}";
 	}
-
-	
-	
-	
 
 }
