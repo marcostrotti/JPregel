@@ -235,6 +235,9 @@ public class Worker implements Runnable {
 		}
 	}
 
+	public List<GraphPartition> getWorkerPartitions(){
+		return this.listOfPartitions;
+	}
 	/**
 	 * @throws DataNotFoundException
 	 * @throws IOException

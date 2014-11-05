@@ -15,10 +15,16 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.logging.Logger;
 
 import utility.JPregelLogger;
@@ -261,7 +267,6 @@ public class MasterImpl extends UnicastRemoteObject implements ManagerToMaster,
 	public synchronized void register(WorkerManager aWorkerManager, String id)
 			throws RemoteException {
 		this.idManagerMap.put(id, aWorkerManager);
-		System.out.println("registered worker manager : " + id);
 		logger.info("registered worker manager : " + id);
 		logger.info("size of map : " + idManagerMap.size());
 
@@ -464,14 +469,50 @@ public class MasterImpl extends UnicastRemoteObject implements ManagerToMaster,
 	}
 
 	/**
+	 * Concurrent storage of solutions in master
+	 * 
 	 * @throws RemoteException
 	 * 
 	 */
 	private void writeSolutions() throws RemoteException {
-		for (Map.Entry<String, WorkerManager> e : this.idManagerMap.entrySet()) {
+		/*for (Map.Entry<String, WorkerManager> e : this.idManagerMap.entrySet()) {
 			WorkerManager aWkrMgr = e.getValue();
 			aWkrMgr.writeSolutions();
+		}*/
+		logger.info("Solutions storing");
+		//Storage solutions in master
+		List<Future<List<GraphPartition>>> list = new ArrayList<Future<List<GraphPartition>>>();
+	    ExecutorService executor = Executors.newFixedThreadPool(this.getWorkerMgrsCount());
+		for (Map.Entry<String, WorkerManager> e : this.idManagerMap.entrySet()) {
+			final WorkerManager aWkrMgr = e.getValue();
+			Callable<List<GraphPartition>> callable=new Callable<List<GraphPartition>>() {
+
+				@Override
+				public List<GraphPartition> call() throws Exception {
+					return aWkrMgr.getSolutions();
+				}
+			};
+			list.add(executor.submit(callable));
+
 		}
+		try {
+			for(Future<List<GraphPartition>> future : list){
+				for(GraphPartition graphPartition : future.get()){
+					graphPartition.writeSolutions();
+				}
+			}
+		logger.info("End of the solutions storage");
+		} catch (InterruptedException e1) {
+			logger.severe("Error storing solutions "+e1.getMessage());
+			e1.printStackTrace();
+		} catch (ExecutionException e1) {
+			logger.severe("Error storing solutions "+e1.getMessage());
+			e1.printStackTrace();
+		} catch (IOException e1) {
+			logger.severe("Error storing solutions "+e1.getMessage());
+			e1.printStackTrace();
+		}
+		
 
 	}
 
@@ -632,10 +673,6 @@ public class MasterImpl extends UnicastRemoteObject implements ManagerToMaster,
 			for (GraphPartition part : graphParitions)
 				part.freePartition();
 			logger.info("End initialize Worker Manager " + thisWkrMgr.getId());
-			/*} catch (IOException e1) {
-				e1.printStackTrace();
-				System.out.println("Master Data Locator Error " + e1.getMessage());
-			}*/
 			index++;
 		}
 	}

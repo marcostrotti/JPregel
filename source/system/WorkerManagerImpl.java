@@ -504,6 +504,20 @@ public class WorkerManagerImpl extends UnicastRemoteObject implements
 
 	}
 
+	
+	/*
+	 * (non-Javadoc)
+	 * @see system.WorkerManager#getSolutions()
+	 */
+	@Override
+	public List<GraphPartition> getSolutions() throws RemoteException {
+		List<GraphPartition> graphPartitions= new Vector<GraphPartition>();
+		for (Worker worker : this.workers){
+			graphPartitions.addAll(worker.getWorkerPartitions());
+		}
+		return graphPartitions;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 

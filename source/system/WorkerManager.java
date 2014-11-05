@@ -117,4 +117,12 @@ public interface WorkerManager extends java.rmi.Remote {
 	 */
 	void restoreState(int lastCheckPoint, List<Integer> list)
 			throws RemoteException;
+	
+	/**
+	 * 
+	 * @return List of processed Graph Partitions
+	 * @throws RemoteException
+	 */
+	List<GraphPartition> getSolutions()throws RemoteException;
+	
 }
