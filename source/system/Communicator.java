@@ -30,6 +30,8 @@ import utility.Pair;
  * end of a superstep. This reduces the number of RMI class destined to any
  * machine in the cluster.
  * 
+ * @author Marcos H. Trotti
+ * 
  * @author Manasa Chandrasekhar
  * @author Kowshik Prakasam
  * 
@@ -154,34 +156,67 @@ public class Communicator implements Runnable {
 					}
 				}
 				if (allDone) {
-					try {
+					System.out.println("All done ");
+					/*try {
 						logger.info("Commencing communications");
+						System.out.println("Commencing communications");
 						communicate();
+						logger.info("Setting communicator state to STOP");
+						System.out.println("** Setting communicator state to STOP ** ");
+						this.setState(CommunicatorState.STOP);
 					} catch (UnknownHostException e) {
 						logger.severe("UnknownHostException occured in communicate()");
+						System.out.println("UnknownHostException occured in communicate()");
 						e.printStackTrace();
 					} catch (RemoteException e) {
 						logger.severe("RemoteException occured in communicate()");
+						System.out.println("RemoteException occured in communicate()");
 						logger.severe(e.toString());
 						e.printStackTrace();
 					} catch (DataNotFoundException e) {
 						logger.severe("DataNotFoundException occured in communicate()");
+						System.out.println("DataNotFoundException occured in communicate()");
 						e.printStackTrace();
 					} catch (IOException e) {
 						logger.severe("IOException occured in communicate() "+ e.getMessage());
+						System.out.println("IOException occured in communicate() "+ e.getMessage());
 						e.printStackTrace();
 					} catch (NotBoundException e) {
 						logger.severe("NotBoundException occured in communicate()");
+						System.out.println("NotBoundException occured in communicate()");
 						e.printStackTrace();
-					} finally {
-						logger.info("Setting communicator state to STOP");
-						this.setState(CommunicatorState.STOP);
+					}catch (Exception e){
+						System.out.println("Rare Exception "+ e.getMessage());
 					}
+					/*finally {
+						logger.info("Setting communicator state to STOP");
+						System.out.println("Setting communicator state to STOP " + allDone);
+						this.setState(CommunicatorState.STOP);
+					}*/
 				}
 			}
 		}
 	}
 
+	public void sendVertexMessages() throws IOException, DataNotFoundException,
+		NotBoundException, RemoteException, UnknownHostException {
+		logger.info("cleaning spooler queues");
+		System.out.println("cleaning spooler queues");
+		clearSpoolerQueues();
+		logger.info("populating spooler queues");
+		System.out.println("populating spooler queues");
+		populateSpoolerQueues();
+		logger.info("send messages queues");
+		System.out.println("send messages queues");
+		sendMessages();
+		stopWorkers();
+		logger.info("Ending superstep");
+		System.out.println("Ending superstep");
+		//this.wkrMgr.endSuperStep();
+		this.setState(CommunicatorState.STOP);
+	}
+ 
+	
 	/**
 	 * All the communication happens here 
 	 * @throws DataNotFoundException
@@ -192,13 +227,17 @@ public class Communicator implements Runnable {
 	private void communicate() throws IOException, DataNotFoundException,
 			NotBoundException, RemoteException, UnknownHostException {
 		logger.info("cleaning spooler queues");
+		System.out.println("cleaning spooler queues");
 		clearSpoolerQueues();
 		logger.info("populating spooler queues");
+		System.out.println("populating spooler queues");
 		populateSpoolerQueues();
 		logger.info("send messages queues");
+		System.out.println("send messages queues");
 		sendMessages();
 		stopWorkers();
 		logger.info("Ending superstep");
+		System.out.println("Ending superstep");
 		this.wkrMgr.endSuperStep();
 		this.setState(CommunicatorState.STOP);
 	}

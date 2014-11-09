@@ -303,7 +303,7 @@ public class MasterImpl extends UnicastRemoteObject implements ManagerToMaster,
 			MasterImpl master = new MasterImpl(vertexClassName, numMachines);
 			Registry registry = LocateRegistry.createRegistry(PORT_NUMBER);
 			registry.rebind(ManagerToMaster.SERVICE_NAME, master);
-			System.err.println("Master instance bound");
+			System.out.println("Master instance bound");
 		} catch (Exception e) {
 			System.err.println("Can't bind Master instance");
 			e.printStackTrace();
@@ -386,8 +386,9 @@ public class MasterImpl extends UnicastRemoteObject implements ManagerToMaster,
 										this.isCheckPoint());
 							}
 							logger.info("Waiting for worker managers to complete execution");
+							System.out.println("Waiting for worker managers to complete execution + +");
 							while (isActive() && !allDone()) {
-
+								//System.out.println("+ isActive() && !allDone() + ");	
 							}
 							if (isActive()) {
 								logger.info("Superstep over : "
@@ -733,8 +734,10 @@ public class MasterImpl extends UnicastRemoteObject implements ManagerToMaster,
 		// this fellow shouldn't have returned before .. checking just in
 		// case there is a double endSuperStep() done by a worker manager
 		// during a stopSuperStep() call
+		System.out.println("End super step signal from "+ wkrMgrId + " superstep " + superStep +"== " +this.getSuperStep());
 		if (!this.returnedManagers.contains(wkrMgrId)
 				&& superStep == this.getSuperStep()) {
+			System.out.println("Manager "+ wkrMgrId + " ckeck OK");
 			// Checking if any managers are yet to report completion
 			if (this.getParticipatingMgrs() > 0) {
 

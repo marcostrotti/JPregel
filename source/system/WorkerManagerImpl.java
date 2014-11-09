@@ -69,6 +69,8 @@ public class WorkerManagerImpl extends UnicastRemoteObject implements
 	private boolean isCheckPoint;
 	private int numWorkers;
 	private boolean justRecovered;
+	
+	private Vector<String> runningWorkers;
 
 	public Communicator getCommunicator() {
 		return aCommunicator;
@@ -183,11 +185,10 @@ public class WorkerManagerImpl extends UnicastRemoteObject implements
 	@Override
 	public void initialize(List<GraphPartition> partitions, int numWorkers,
 			int partitionSize, int numVertices,Map<Integer, Pair<String, String>> partitionMap){
-		System.out.println("Received partitionNumbers : " + partitions);
+		//XXX: 
+		this.runningWorkers=new Vector<String>();
 		logger.info("Received partitionNumbers : " + partitions);
-		
 		this.setNumWorkers(numWorkers);
-		System.out.println("Set num Workers : " + numWorkers);
 		// Set datalocator in communicator
 		DataLocator aDataLocator = null;
 		try {
@@ -221,23 +222,16 @@ public class WorkerManagerImpl extends UnicastRemoteObject implements
 			partitionNumbers.add(partition.getPartitionID());
 		}
 		
-		System.out.println("this.getCommunicator().setDataLocator " + partitionSize);
 		// assign partitions to workers
 		List<List<Integer>> assignedPartitions = this
 				.assignPartitions(partitionNumbers);
 		// for each assigned partition, initialize the worker
 		for (List<Integer> threadPartition : assignedPartitions) {
 			try {
-				System.out.println("assigned partition, initialize the worker " + threadPartition);
 				Worker aWkr = new Worker(threadPartition, partitionSize, this,
 						vertexClassName, this.getCommunicator(), numVertices);
-				System.out.println("Create worker " + assignedPartitions);
 				this.getCommunicator().registerWorker(aWkr);
-				System.out.println("Register worker " + assignedPartitions);
 				this.idVertexMap.putAll(aWkr.getVertices());
-				System.out.println("worker get vertices " + assignedPartitions);
-				System.out.println("Cached all vertices of this worker. Size of id->vertex map is : "
-						+ this.idVertexMap.size());
 				logger.info("Cached all vertices of this worker. Size of id->vertex map is : "
 						+ this.idVertexMap.size());
 				this.workers.add(aWkr);
@@ -342,6 +336,7 @@ public class WorkerManagerImpl extends UnicastRemoteObject implements
 		this.isCheckPoint = isCheckPoint;
 
 		logger.info("Beginning superstep : " + superStepNumber);
+		System.out.println("Beginning superstep : " + superStepNumber);
 		// Distribute messages from last superstep
 		try {
 			boolean msgDistributed = false;
@@ -353,22 +348,33 @@ public class WorkerManagerImpl extends UnicastRemoteObject implements
 					|| superStep == JPregelConstants.FIRST_SUPERSTEP) {
 				checkpointData();
 			}
+			
 			if (msgDistributed
 					|| (superStepNumber == JPregelConstants.FIRST_SUPERSTEP)) {
 
 				// start communicator
 				logger.info("Starting communicator");
+				System.out.println("Starting communicator");
 				aCommunicator.setState(Communicator.CommunicatorState.EXECUTE);
 				logger.info("Set communicator state to EXECUTE");
+				System.out.println("End Starting communicator");
+				System.out.println("Init workers ");
 				// start workers
+				//Every time should be empty
+				this.runningWorkers.clear();
 				for (int index = 0; index < this.workers.size(); index++) {
+					System.out.println("***** Starting worker "+ (index + 1 ) + " of " + this.workers.size());
 					Worker aWorker = this.workers.get(index);
+					this.runningWorkers.add(aWorker.getId());
 					aWorker.setSuperStep(superStepNumber);
 					aWorker.setState(Worker.WorkerState.EXECUTE);
+					System.out.println("***** End Starting worker "+ (index + 1) + " of " + this.workers.size());
 				}
+				System.out.println("End of Init workers ");
 
 			} else {
 				logger.info("No messages in superstep : " + superStepNumber);
+				System.out.println("No messages in superstep : " + superStepNumber);
 				endSuperStep();
 			}
 		} catch (IllegalMessageException e) {
@@ -379,6 +385,41 @@ public class WorkerManagerImpl extends UnicastRemoteObject implements
 
 	}
 
+	
+	public synchronized void  endJob(String workerID){
+		if (this.runningWorkers.contains(workerID))
+			this.runningWorkers.remove(workerID);
+		if (this.runningWorkers.isEmpty())
+			try {
+				System.out.println("Sending vertex messages");	
+				this.aCommunicator.sendVertexMessages();
+				System.out.println("End Sending vertex messages");
+				System.out.println("Ending computation");
+				endSuperStep();
+				System.out.println("End superstep");
+			} catch (UnknownHostException e) {
+				logger.severe("UnknownHostException occured in communicate()");
+				System.out.println("UnknownHostException occured in communicate()");
+				e.printStackTrace();
+			} catch (RemoteException e) {
+				logger.severe("RemoteException occured in communicate()");
+				System.out.println("RemoteException occured in communicate()");
+				logger.severe(e.toString());
+				e.printStackTrace();
+			} catch (DataNotFoundException e) {
+				logger.severe("DataNotFoundException occured in communicate()");
+				System.out.println("DataNotFoundException occured in communicate()");
+				e.printStackTrace();
+			} catch (IOException e) {
+				logger.severe("IOException occured in communicate() "+ e.getMessage());
+				System.out.println("IOException occured in communicate() "+ e.getMessage());
+				e.printStackTrace();
+			} catch (NotBoundException e) {
+				logger.severe("NotBoundException occured in communicate()");
+				System.out.println("NotBoundException occured in communicate()");
+				e.printStackTrace();
+			} 
+	}
 	/**
 	 * @throws IllegalMessageException
 	 * 
@@ -404,6 +445,7 @@ public class WorkerManagerImpl extends UnicastRemoteObject implements
 
 	public void endSuperStep() throws RemoteException {
 		logger.info("Ending superstep");
+		System.out.println("Ending superstep " + this.getId());
 		master.endSuperStep(this.getId());
 	}
 

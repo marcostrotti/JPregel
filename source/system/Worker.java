@@ -140,13 +140,15 @@ public class Worker implements Runnable {
 
 	}
 
+	//TODO: maybe this thread can sleep in DONE state
 	@Override
 	public void run() {
 		while (true) {
 
 			if (this.getState() == WorkerState.EXECUTE) {
-				boolean stopStep = false;
+				//boolean stopStep = false;
 				logger.info("Executing");
+				System.out.println("Executing " + this.getId());
 				for (GraphPartition gPartition : this.listOfPartitions) {
 					if (this.getState() == WorkerState.EXECUTE) {
 						for (Vertex v : gPartition.getVertices()) {
@@ -155,6 +157,10 @@ public class Worker implements Runnable {
 										+ v.toString()
 										+ " at superstep : "
 										+ getSuperStep());
+								/*System.out.println("Starting initCompute() on vertex : "
+										+ v.toString()
+										+ " at superstep : "
+										+ getSuperStep());*/
 								v.initCompute();
 							}else{
 								logger.info("Skipping vertices for this partition as worker state is : "+this.getState());
@@ -166,8 +172,10 @@ public class Worker implements Runnable {
 					}
 
 				}
+				System.out.println("END Executing " + this.getId());
 				if (this.getState() == WorkerState.EXECUTE) {
 					this.setState(WorkerState.DONE);
+					this.mgr.endJob(this.getId());
 				}
 			}
 		}

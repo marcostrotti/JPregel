@@ -1,17 +1,18 @@
+<h1>JPregel</h1>
+
 A system and a Java API for large-scale graph processing based on Google's Pregel.
 
- Current Developer :
+ Current Developer:
  * Marcos H. Trotti
  
- Original Developers :
- * Kowshik Prakasam : myfirstname AT umail DOT ucsb DOT edu
- * Manasa Chandrashekar : myfirstname_lastname AT umail DOT ucsb DOT edu
+ Original Developers:
+ * Kowshik Prakasam: myfirstname AT umail DOT ucsb DOT edu
+ * Manasa Chandrashekar: myfirstname_lastname AT umail DOT ucsb DOT edu
  
- Know Bugs
+ <h3>Know Bugs</h3>
  * Random deadlock
  
- Changelog
- 
- 05-11-2014
- * Host distributed   storage of partitions
+ <h3>Changelog</h3>
+ <strong>05-11-2014</strong>
+ * Host distributed storage of partitions
  * Master solutions storage
