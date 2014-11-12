@@ -9,10 +9,14 @@ A system and a Java API for large-scale graph processing based on Google's Prege
  * Kowshik Prakasam: myfirstname AT umail DOT ucsb DOT edu
  * Manasa Chandrashekar: myfirstname_lastname AT umail DOT ucsb DOT edu
  
- <h3>Know Bugs</h3>
- * Random deadlock
+ <h3>Work in progress</h3>
+ * New partition map file
+ 
  
  <h3>Changelog</h3>
+ <strong>11-11-2014</strong>
+  * Random deadlock solved 
+  * Changed Worker->WorkerManager  Synchronization Schema  
  <strong>05-11-2014</strong>
  * Host distributed storage of partitions
  * Master solutions storage

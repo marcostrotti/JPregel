@@ -354,24 +354,18 @@ public class WorkerManagerImpl extends UnicastRemoteObject implements
 
 				// start communicator
 				logger.info("Starting communicator");
-				System.out.println("Starting communicator");
 				aCommunicator.setState(Communicator.CommunicatorState.EXECUTE);
 				logger.info("Set communicator state to EXECUTE");
-				System.out.println("End Starting communicator");
-				System.out.println("Init workers ");
 				// start workers
 				//Every time should be empty
 				this.runningWorkers.clear();
 				for (int index = 0; index < this.workers.size(); index++) {
-					System.out.println("***** Starting worker "+ (index + 1 ) + " of " + this.workers.size());
 					Worker aWorker = this.workers.get(index);
 					this.runningWorkers.add(aWorker.getId());
 					aWorker.setSuperStep(superStepNumber);
 					aWorker.setState(Worker.WorkerState.EXECUTE);
 					// Wakeup the Worker
-					System.out.println("***** End Starting worker "+ (index + 1) + " of " + this.workers.size());
 				}
-				System.out.println("End of Init workers ");
 
 			} else {
 				logger.info("No messages in superstep : " + superStepNumber);
@@ -395,12 +389,8 @@ public class WorkerManagerImpl extends UnicastRemoteObject implements
 			this.runningWorkers.remove(workerID);
 		if (this.runningWorkers.isEmpty())
 			try {
-				System.out.println("Sending vertex messages");	
 				this.aCommunicator.sendVertexMessages();
-				System.out.println("End Sending vertex messages");
-				System.out.println("Ending computation");
 				endSuperStep();
-				System.out.println("End superstep");
 			} catch (UnknownHostException e) {
 				logger.severe("UnknownHostException occured in communicate()");
 				System.out.println("UnknownHostException occured in communicate()");

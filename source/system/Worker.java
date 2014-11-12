@@ -161,6 +161,10 @@ public class Worker implements Runnable {
 										+ " at superstep : "
 										+ getSuperStep());
 								v.initCompute();
+								System.out.println("Starting initCompute() on vertex : "
+										+ v.toString()
+										+ " at superstep : "
+										+ getSuperStep());
 							}else{
 								logger.info("Skipping vertices for this partition as worker state is : "+this.getState());
 								break;
