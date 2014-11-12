@@ -368,6 +368,7 @@ public class WorkerManagerImpl extends UnicastRemoteObject implements
 					this.runningWorkers.add(aWorker.getId());
 					aWorker.setSuperStep(superStepNumber);
 					aWorker.setState(Worker.WorkerState.EXECUTE);
+					// Wakeup the Worker
 					System.out.println("***** End Starting worker "+ (index + 1) + " of " + this.workers.size());
 				}
 				System.out.println("End of Init workers ");
@@ -385,7 +386,10 @@ public class WorkerManagerImpl extends UnicastRemoteObject implements
 
 	}
 
-	
+	/**
+	 * 
+	 * @param workerID
+	 */
 	public synchronized void  endJob(String workerID){
 		if (this.runningWorkers.contains(workerID))
 			this.runningWorkers.remove(workerID);
@@ -418,7 +422,7 @@ public class WorkerManagerImpl extends UnicastRemoteObject implements
 				logger.severe("NotBoundException occured in communicate()");
 				System.out.println("NotBoundException occured in communicate()");
 				e.printStackTrace();
-			} 
+			}
 	}
 	/**
 	 * @throws IllegalMessageException

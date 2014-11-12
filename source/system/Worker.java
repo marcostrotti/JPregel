@@ -32,6 +32,10 @@ public class Worker implements Runnable {
 
 	private int superStep;
 
+	public static enum WorkerState {
+		EXECUTE, DONE, STOP
+	};
+	
 	public int getSuperStep() {
 		return superStep;
 	}
@@ -56,10 +60,6 @@ public class Worker implements Runnable {
 	private static final String LOG_FILE_PREFIX = JPregelConstants.LOG_DIR
 			+ "worker_";
 	private static final String LOG_FILE_SUFFIX = ".log";
-
-	public static enum WorkerState {
-		EXECUTE, DONE, STOP
-	};
 
 	private WorkerManagerImpl mgr;
 	private String vertexClassName;
@@ -119,7 +119,6 @@ public class Worker implements Runnable {
 		this(mgr, vertexClassName, partitionSize, aCommunicator, numVertices);
 		logger.info("Worker : " + this.getId() + " received partitions : "
 				+ partitionNumers);
-		//TODO: FROM HERE
 		DataLocator aDataLocator = DataLocator.getDataLocator(partitionSize);
 		for (Integer partitionNumber : partitionNumers) {
 			System.out.println("DataLocator searching for partition " + partitionNumber);
@@ -143,10 +142,14 @@ public class Worker implements Runnable {
 	//TODO: maybe this thread can sleep in DONE state
 	@Override
 	public void run() {
-		while (true) {
 
-			if (this.getState() == WorkerState.EXECUTE) {
-				//boolean stopStep = false;
+		while (true) {			
+			synchronized(this){
+			try {
+				while(this.getState()!=WorkerState.EXECUTE){
+					System.out.println("Not in execute state");
+					wait();
+				}
 				logger.info("Executing");
 				System.out.println("Executing " + this.getId());
 				for (GraphPartition gPartition : this.listOfPartitions) {
@@ -157,10 +160,6 @@ public class Worker implements Runnable {
 										+ v.toString()
 										+ " at superstep : "
 										+ getSuperStep());
-								/*System.out.println("Starting initCompute() on vertex : "
-										+ v.toString()
-										+ " at superstep : "
-										+ getSuperStep());*/
 								v.initCompute();
 							}else{
 								logger.info("Skipping vertices for this partition as worker state is : "+this.getState());
@@ -172,14 +171,15 @@ public class Worker implements Runnable {
 					}
 
 				}
-				System.out.println("END Executing " + this.getId());
-				if (this.getState() == WorkerState.EXECUTE) {
-					this.setState(WorkerState.DONE);
-					this.mgr.endJob(this.getId());
+				
+				this.mgr.endJob(this.getId());
+				this.setState(WorkerState.DONE);
+
+				} catch (InterruptedException e1) {
+					e1.printStackTrace();
 				}
 			}
 		}
-
 	}
 
 	/**
@@ -193,8 +193,9 @@ public class Worker implements Runnable {
 	 * @return
 	 */
 	public synchronized void setState(WorkerState newState) {
-		logger.info("Setting worker state to : " + newState);
+		logger.info("Setting worker state to : " + newState + this.getId());
 		this.state = newState;
+		notify();
 	}
 
 	/**

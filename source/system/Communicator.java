@@ -36,7 +36,7 @@ import utility.Pair;
  * @author Kowshik Prakasam
  * 
  */
-public class Communicator implements Runnable {
+public class Communicator /*implements Runnable */{
 
 	// A map of ID to MessageSpooler
 	// Or rather, a map of ID to a remote worker manager
@@ -136,13 +136,13 @@ public class Communicator implements Runnable {
 		this.registeredWorkers = new Vector<Worker>();
 		this.msgQueue = new LinkedList<Message>();
 		this.idSpoolerMap = new HashMap<String, Pair<MessageSpooler, List<Message>>>();
-		t = new Thread(this, "Communicator");
-		t.start();
+		//t = new Thread(this, "Communicator");
+		//t.start();
 	}
 
 	// The communicator loops forever polling workers to check if the have
 	// transitioned states
-
+/*
 	@Override
 	public void run() {
 		while (true) {
@@ -193,11 +193,11 @@ public class Communicator implements Runnable {
 						System.out.println("Setting communicator state to STOP " + allDone);
 						this.setState(CommunicatorState.STOP);
 					}*/
-				}
+	/*			}
 			}
 		}
 	}
-
+*/
 	public void sendVertexMessages() throws IOException, DataNotFoundException,
 		NotBoundException, RemoteException, UnknownHostException {
 		logger.info("cleaning spooler queues");
@@ -209,7 +209,7 @@ public class Communicator implements Runnable {
 		logger.info("send messages queues");
 		System.out.println("send messages queues");
 		sendMessages();
-		stopWorkers();
+		//stopWorkers();
 		logger.info("Ending superstep");
 		System.out.println("Ending superstep");
 		//this.wkrMgr.endSuperStep();
