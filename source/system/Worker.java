@@ -147,7 +147,7 @@ public class Worker implements Runnable {
 			synchronized(this){
 			try {
 				while(this.getState()!=WorkerState.EXECUTE){
-					System.out.println("Not in execute state");
+					System.out.println("Not in execute state " + this.getId());
 					wait();
 				}
 				logger.info("Executing");
@@ -161,24 +161,25 @@ public class Worker implements Runnable {
 										+ " at superstep : "
 										+ getSuperStep());
 								v.initCompute();
-								System.out.println("Starting initCompute() on vertex : "
+								/*System.out.println("Starting initCompute() on vertex : "
 										+ v.toString()
 										+ " at superstep : "
-										+ getSuperStep());
+										+ getSuperStep());*/
 							}else{
 								logger.info("Skipping vertices for this partition as worker state is : "+this.getState());
+								System.out.println("Skipping vertices for this partition as worker state is : "+this.getState());
 								break;
 							}
 						}						
 					}else{
 						logger.info("Skipping partition "+gPartition.getPartitionID()+" as worker state is : "+this.getState());
+						System.out.println("Skipping partition "+gPartition.getPartitionID()+" as worker state is : "+this.getState());
 					}
 
 				}
-				
-				this.mgr.endJob(this.getId());
+				System.out.println("End Execution " + this.getId());
 				this.setState(WorkerState.DONE);
-
+				this.mgr.endJob(this.getId());
 				} catch (InterruptedException e1) {
 					e1.printStackTrace();
 				}

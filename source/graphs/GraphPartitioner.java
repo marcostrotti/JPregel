@@ -146,6 +146,7 @@ public class GraphPartitioner {
 				this.graphFile));
 		String line = null;
 		int thisPartitionSize = 0;
+		int vertexInternalIdentifier=0;
 		while (true) {
 			thisPartitionSize = 0;
 			List<Vertex> listOfVertices = new Vector<Vertex>();
@@ -155,6 +156,7 @@ public class GraphPartitioner {
 				Vertex newVertex = (Vertex) (Class.forName(vertexClassName)
 						.newInstance());
 				newVertex.initialize(line);
+				vertexInternalIdentifier++;
 				listOfVertices.add(newVertex);
 			}
 
@@ -168,8 +170,6 @@ public class GraphPartitioner {
 						+ newPartitionFile);
 				newPartition.writeToFile(newPartitionFile);
 				listOfPartitions.add(newPartition);
-				
-				//newPartition.freePartition();
 			}
 			if (line == null) {
 				logger.info("Breaking because no lines are left");

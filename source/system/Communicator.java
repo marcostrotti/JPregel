@@ -46,6 +46,15 @@ public class Communicator /*implements Runnable */{
 	private Queue<Message> msgQueue;
 	private WorkerManagerImpl wkrMgr;
 	private DataLocator aDataLocator;
+	private int partitionsPerWorkerManager;
+
+	public int getPartitionsPerWorkerManager() {
+		return partitionsPerWorkerManager;
+	}
+
+	public void setPartitionsPerWorkerManager(int partitionsPerWorkerManager) {
+		this.partitionsPerWorkerManager = partitionsPerWorkerManager;
+	}
 
 	/**
 	 * 
@@ -269,13 +278,20 @@ public class Communicator /*implements Runnable */{
 		Message msg;
 		Map<Integer, Pair<String, String>> partitionMap = this.aDataLocator
 				.readPartitionMap();
+		System.out.println("Before ");
 		while (!msgQueue.isEmpty()) {
+			System.out.println("Afeter ");
 			msg = msgQueue.remove();
 			int targetVertexID = msg.getDestVertexID();
-			int targetPartition = this.aDataLocator
-					.getPartitionNumber(targetVertexID);
+			 
+			/*int targetPartition = this.aDataLocator.getPartitionNumber(targetVertexID);
 			Pair<String, String> targetWkrMgrInfo = partitionMap
-					.get(targetPartition);
+					.get(targetPartition);*/
+			//TODO: vertexID should be Internal
+			System.out.println("Vertice " + targetVertexID );
+			System.out.println("Particion " +(int)targetVertexID / (partitionsPerWorkerManager*this.aDataLocator.getPartitionSize()));
+			Pair<String, String> targetWkrMgrInfo = partitionMap
+					.get((int)(targetVertexID / (partitionsPerWorkerManager*this.aDataLocator.getPartitionSize())));
 			String targetWkrMgrServiceName = targetWkrMgrInfo.getFirst();
 			String targetWkrMgrHostName = targetWkrMgrInfo.getSecond().split(
 					":")[0];

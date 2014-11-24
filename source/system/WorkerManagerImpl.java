@@ -71,6 +71,7 @@ public class WorkerManagerImpl extends UnicastRemoteObject implements
 	private boolean justRecovered;
 	
 	private Vector<String> runningWorkers;
+	private boolean msgDistributed;
 
 	public Communicator getCommunicator() {
 		return aCommunicator;
@@ -184,7 +185,7 @@ public class WorkerManagerImpl extends UnicastRemoteObject implements
 	 */
 	@Override
 	public void initialize(List<GraphPartition> partitions, int numWorkers,
-			int partitionSize, int numVertices,Map<Integer, Pair<String, String>> partitionMap){
+			int partitionSize, int numVertices,Map<Integer, Pair<String, String>> partitionMap, int partitionsPerWorkerManager){
 		//XXX: 
 		this.runningWorkers=new Vector<String>();
 		logger.info("Received partitionNumbers : " + partitions);
@@ -196,6 +197,7 @@ public class WorkerManagerImpl extends UnicastRemoteObject implements
 			aDataLocator = DataLocator.getDataLocator(partitionSize);
 			aDataLocator.writePartitionMap(partitionMap);
 			this.getCommunicator().setDataLocator(aDataLocator);
+			this.getCommunicator().setPartitionsPerWorkerManager(partitionsPerWorkerManager);
 		} catch (IOException e) {
 			String msg = "RemoteException in DataLocator in worker manager : "
 					+ this.getId();
@@ -324,6 +326,24 @@ public class WorkerManagerImpl extends UnicastRemoteObject implements
 		return this.numWorkers;
 	}
 
+	
+	
+	
+	@Override
+	public void setupSuperStep(int superStepNumber) throws RemoteException {
+		this.msgDistributed = false;
+		try {
+			System.out.println("Setup superstep sending messages");
+			if (!this.justRecovered() || superStepNumber != JPregelConstants.FIRST_SUPERSTEP)
+				this.msgDistributed = distributeMessages();
+			System.out.println("End Setup superstep sending messages");
+		} catch (IllegalMessageException e) {
+			logger.severe("Error sending messages "+ e.getMessage());
+			e.printStackTrace();
+			throw new RemoteException("Error sending messages "+ e.getMessage(), e);
+		}
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -338,11 +358,7 @@ public class WorkerManagerImpl extends UnicastRemoteObject implements
 		logger.info("Beginning superstep : " + superStepNumber);
 		System.out.println("Beginning superstep : " + superStepNumber);
 		// Distribute messages from last superstep
-		try {
-			boolean msgDistributed = false;
-			if (!this.justRecovered()) {
-				msgDistributed = distributeMessages();
-			}
+		
 			this.setRecoveryStep(false);
 			if (this.isCheckPoint
 					|| superStep == JPregelConstants.FIRST_SUPERSTEP) {
@@ -372,11 +388,7 @@ public class WorkerManagerImpl extends UnicastRemoteObject implements
 				System.out.println("No messages in superstep : " + superStepNumber);
 				endSuperStep();
 			}
-		} catch (IllegalMessageException e) {
-			logger.severe(e.getMessage());
-			e.printStackTrace();
-			throw new RemoteException(e.getMessage(), e);
-		}
+		
 
 	}
 

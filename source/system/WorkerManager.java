@@ -77,7 +77,7 @@ public interface WorkerManager extends java.rmi.Remote {
 	 * 
 	 */
 	void initialize(List<GraphPartition> partitions, int numWorkers,
-			int partitionSize, int numVertices, Map<Integer, Pair<String, String>> partitionMap) throws RemoteException;
+			int partitionSize, int numVertices, Map<Integer, Pair<String, String>> partitionMap, int partitionsPerWorkerManager) throws RemoteException;
 	
 	/**
 	 * Commences a particular superstep in the worker manager
@@ -91,6 +91,14 @@ public interface WorkerManager extends java.rmi.Remote {
 	void beginSuperStep(int superStepNumber, boolean isCheckPoint)
 			throws RemoteException;
 
+	/**
+	 * 
+	 * Distribute messages generated in previous superstep
+	 * 
+	 * @throws RemoteException
+	 */
+	void setupSuperStep(int superStepNumber) throws RemoteException;
+	
 	/**
 	 * Dumps solutions from every vertex assigned to this worker manager. This
 	 * is called by the Master when all supersteps have been completed.

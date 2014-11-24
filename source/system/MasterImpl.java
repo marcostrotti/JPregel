@@ -369,7 +369,35 @@ public class MasterImpl extends UnicastRemoteObject implements ManagerToMaster,
 							} catch (InterruptedException e) {
 								e.printStackTrace();
 							}
+							
+							List<Future<Void>> list = new ArrayList<Future<Void>>();
+						    ExecutorService executor = Executors.newFixedThreadPool(this.getWorkerMgrsCount());
+							for (Map.Entry<String, WorkerManager> e : this.idManagerMap
+									.entrySet()) {
+								String aWkrMgrId = e.getKey();
+								final WorkerManager aWkrMgr = e.getValue();
+								logger.info("Send messages : "
+										+ this.getSuperStep()
+										+ " from worker manager : " + aWkrMgrId);
+								
+								Callable<Void> callable=new Callable<Void>() {
 
+									@Override
+									public Void call() throws Exception {
+										aWkrMgr.setupSuperStep(getSuperStep());
+										return null;
+									}
+								};
+								list.add(executor.submit(callable));
+								
+							}
+							System.out.println("Messages ");
+							for (Future<Void> future : list)
+								future.get();
+							System.out.println("END Messages ");
+							//XXX: future result
+
+							
 							this.setAllDone(false);
 
 							this.setParticipatingMgrs(this.idManagerMap.size());
@@ -438,6 +466,12 @@ public class MasterImpl extends UnicastRemoteObject implements ManagerToMaster,
 					logger.severe(e.getMessage());
 					e.printStackTrace();
 					break;
+				} catch (InterruptedException e1) {
+					logger.severe(e1.getMessage());
+					e1.printStackTrace();
+				} catch (ExecutionException e1) {
+					logger.severe(e1.getMessage());
+					e1.printStackTrace();
 				}
 
 			}
@@ -643,11 +677,12 @@ public class MasterImpl extends UnicastRemoteObject implements ManagerToMaster,
 		for (Map.Entry<String, WorkerManager> e : this.idManagerMap.entrySet()) {
 			thisWkrMgrId = e.getKey();
 			thisWkrMgr = e.getValue();
-			List<Integer> thisWkrMgrPartitions = assignedPartitions.get(index);
+			/*List<Integer> thisWkrMgrPartitions = assignedPartitions.get(index);
 			for (int partition : thisWkrMgrPartitions) {
 				partitionWkrMgrMap.put(partition, new Pair<String, String>(
 						thisWkrMgrId, thisWkrMgr.getHostInfo()));
-			}
+			}*/
+			partitionWkrMgrMap.put(index, new Pair<String, String>(thisWkrMgrId, thisWkrMgr.getHostInfo()));
 			index++;
 		}
 		return partitionWkrMgrMap;
@@ -666,10 +701,11 @@ public class MasterImpl extends UnicastRemoteObject implements ManagerToMaster,
 			for (int partitionID : thisWkrMgrPartitions){
 				graphParitions.add(this.gp.getPartition(partitionID));
 			}
-			//try {
+			
 			logger.info("Initialize Worker Manager " + thisWkrMgr.getId());
 			thisWkrMgr.initialize(graphParitions, this.getWorkerMgrThreads(), 
-					this.gp.getPartitionSize(), this.gp.getNumVertices(), partitionWkrMgrMap );
+					this.gp.getPartitionSize(), this.gp.getNumVertices(), partitionWkrMgrMap, (int)(this.gp.getNumberOfPartitions() / this.getWorkerMgrsCount()));
+			
 			// Free partitions cache
 			for (GraphPartition part : graphParitions)
 				part.freePartition();

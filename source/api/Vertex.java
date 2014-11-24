@@ -31,7 +31,12 @@ public abstract class Vertex implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 7498169364791651592L;
+	private static int internalVertexIdentifier=0;
+	/**
+	 * Used to numerate internaly
+	 */
 	private int vertexID;
+	private int vertexData;
 	public static final String vertexToEdgesSep = "->";
 	public static final String edgesSep = ",";
 	public List<Message> msgs;
@@ -163,10 +168,11 @@ public abstract class Vertex implements Serializable {
 		if (vertexToEdges.length != 2) {
 			throw new IllegalInputException(adjacencyListRecord);
 		}
-		int vertexID = -1;
+		int vertexData = -1;
 
+		vertexID= Vertex.getInternalVertexID();
 		try {
-			vertexID = Integer.parseInt(vertexToEdges[0]);
+			vertexData = Integer.parseInt(vertexToEdges[0]);
 
 		} catch (NumberFormatException e) {
 			throw new IllegalInputException(adjacencyListRecord);
@@ -189,6 +195,11 @@ public abstract class Vertex implements Serializable {
 			Edge e = new Edge(this.getVertexID(), edgeDetail);
 			this.outgoingEdges.add(e);
 		}
+	}
+
+	private static int getInternalVertexID() {
+		
+		return Vertex.internalVertexIdentifier++;
 	}
 
 	/**
@@ -326,6 +337,15 @@ public abstract class Vertex implements Serializable {
 		this.msgs.clear();
 
 	}
+
+	public int getVertexData() {
+		return vertexData;
+	}
+
+	public void setVertexData(int vertexData) {
+		this.vertexData = vertexData;
+	}
+	
 	
 
 }

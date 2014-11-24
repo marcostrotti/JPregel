@@ -148,7 +148,7 @@ public class DataLocator {
 	}
 
 	/**
-	 * Returns the partition number that corresponds to a giveb vertex ID
+	 * Returns the partition number that corresponds to a given vertex ID
 	 * 
 	 * @param vertexID
 	 * @return
