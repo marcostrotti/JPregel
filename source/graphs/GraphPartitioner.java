@@ -168,7 +168,8 @@ public class GraphPartitioner {
 						listOfVertices);
 				logger.info("Dumped : " + listOfVertices.size() + " to file : "
 						+ newPartitionFile);
-				newPartition.writeToFile(newPartitionFile);
+				//XXX: partitions only in Worker Manager 
+				//newPartition.writeToFile(newPartitionFile);
 				listOfPartitions.add(newPartition);
 			}
 			if (line == null) {

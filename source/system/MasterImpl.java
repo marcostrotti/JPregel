@@ -25,6 +25,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import utility.JPregelLogger;
@@ -63,6 +64,8 @@ public class MasterImpl extends UnicastRemoteObject implements ManagerToMaster,
 	private String vertexClassName;
 	private List<String> returnedManagers;
 	private boolean allDone;
+	
+	private float initTime,endTime;
 
 	private int participatingMgrs;
 
@@ -334,13 +337,14 @@ public class MasterImpl extends UnicastRemoteObject implements ManagerToMaster,
 
 	public void executeTask() throws RemoteException {
 		try {
-			System.out.println("Particionando grafo ");
+			initTime=System.nanoTime();
 			this.gp = new GraphPartitioner(JPregelConstants.GRAPH_FILE, this,
 					this.getVertexClassName());
 		} catch (IOException e) {
 			logger.severe(e.toString());
 			throw new RemoteException(e.getMessage(),e);
 		}
+		
 		this.setAllDone(true);
 		this.activate();
 		logger.info("Starting superstep executor thread");
@@ -359,6 +363,7 @@ public class MasterImpl extends UnicastRemoteObject implements ManagerToMaster,
 					}
 					synchronized (idManagerMap) {
 						if (!isWkrMgrsInitialized()) {
+							
 							initializeWorkerManagers();
 							setWkrMgrsInitialized(true);
 						}
@@ -391,12 +396,9 @@ public class MasterImpl extends UnicastRemoteObject implements ManagerToMaster,
 								list.add(executor.submit(callable));
 								
 							}
-							System.out.println("Messages ");
+							
 							for (Future<Void> future : list)
 								future.get();
-							System.out.println("END Messages ");
-							//XXX: future result
-
 							
 							this.setAllDone(false);
 
@@ -414,7 +416,6 @@ public class MasterImpl extends UnicastRemoteObject implements ManagerToMaster,
 										this.isCheckPoint());
 							}
 							logger.info("Waiting for worker managers to complete execution");
-							System.out.println("Waiting for worker managers to complete execution + +");
 							while (isActive() && !allDone()) {
 								//System.out.println("+ isActive() && !allDone() + ");	
 							}
@@ -428,6 +429,8 @@ public class MasterImpl extends UnicastRemoteObject implements ManagerToMaster,
 							logger.info("Writing Solutions");
 							// Writing solutions
 							writeSolutions();
+							endTime= System.nanoTime();
+							System.out.println("Task took "+ ((endTime - initTime)/1000000));
 							System.err.println("Computations completed. Solutions written to solutions/. Logs in logs/ !");
 							break;
 						}
@@ -657,12 +660,11 @@ public class MasterImpl extends UnicastRemoteObject implements ManagerToMaster,
 		logger.info("Num partitions : " + numPartitions);
 		List<List<Integer>> assignedPartitions = this.assignPartitions();
 		Map<Integer, Pair<String, String>> partitionWkrMgrMap = this.getPartitionMap(assignedPartitions);
-		System.out.println("Initializwe Worker Managers assigned  "+assignedPartitions);
 		this.initializeWorkerManagers(assignedPartitions, partitionWkrMgrMap);
-		System.out.println("End Initialize Worker Managers assigned  "+assignedPartitions);
 		// Write partition - worker manager map to file
 		DataLocator dl = DataLocator.getDataLocator(gp.getPartitionSize());
-		dl.writePartitionMap(partitionWkrMgrMap);
+		//XXX: partitions only storage in worker manager
+		//dl.writePartitionMap(partitionWkrMgrMap);
 		logger.info("Initialized worker managers : ");
 		dl.clearSolutions();
 		logger.info("Cleared solutions folder");
@@ -692,7 +694,6 @@ public class MasterImpl extends UnicastRemoteObject implements ManagerToMaster,
 			throws RemoteException {
 		int index = 0;
 		WorkerManager thisWkrMgr = null;
-		System.out.println("Initialize work managers ");
 		for (Map.Entry<String, WorkerManager> e : this.idManagerMap.entrySet()) {
 			thisWkrMgr = e.getValue();
 			List<Integer> thisWkrMgrPartitions = assignedPartitions.get(index);
@@ -732,8 +733,6 @@ public class MasterImpl extends UnicastRemoteObject implements ManagerToMaster,
 		WorkerManager thisWkrMgr = null;
 		for (Map.Entry<String, WorkerManager> e : this.idManagerMap.entrySet()) {
 			if (thisWkrMgr != null) {
-				System.out.println("Generating partitions for worker manager : "
-						+ thisWkrMgr.getId() + " -> " + wkrMgrPartitions);
 				logger.info("Generating partitions for worker manager : "
 						+ thisWkrMgr.getId() + " -> " + wkrMgrPartitions);
 				assignedPartitions.add(wkrMgrPartitions);
@@ -770,10 +769,8 @@ public class MasterImpl extends UnicastRemoteObject implements ManagerToMaster,
 		// this fellow shouldn't have returned before .. checking just in
 		// case there is a double endSuperStep() done by a worker manager
 		// during a stopSuperStep() call
-		System.out.println("End super step signal from "+ wkrMgrId + " superstep " + superStep +"== " +this.getSuperStep());
 		if (!this.returnedManagers.contains(wkrMgrId)
 				&& superStep == this.getSuperStep()) {
-			System.out.println("Manager "+ wkrMgrId + " ckeck OK");
 			// Checking if any managers are yet to report completion
 			if (this.getParticipatingMgrs() > 0) {
 

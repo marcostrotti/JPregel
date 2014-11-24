@@ -121,12 +121,13 @@ public abstract class Vertex implements Serializable {
 	/**
 	 * Initializes the vertex with an ID, value and a list of outgoing edges
 	 * 
-	 * @param vertexID
+	 * @param vertexData
 	 * @param value
 	 * @param outgoingEdges
 	 */
-	public void initialize(int vertexID, Integer value, List<Edge> outgoingEdges) {
-		this.vertexID = vertexID;
+	public void initialize(int vertexData, Integer value, List<Edge> outgoingEdges) {
+		this.vertexID= Vertex.getInternalVertexID();
+		this.vertexData = vertexID;
 		this.value = value;
 		this.outgoingEdges = outgoingEdges;
 		if (outgoingEdges == null) {
@@ -165,24 +166,43 @@ public abstract class Vertex implements Serializable {
 		 * vertexToEdges[1] = B:3,C:5,D:25
 		 */
 		String[] vertexToEdges = adjacencyListRecord.split(vertexToEdgesSep);
+		
 		if (vertexToEdges.length != 2) {
-			throw new IllegalInputException(adjacencyListRecord);
+			throw new IllegalInputException("Error Paricionando "+adjacencyListRecord);
 		}
-		int vertexData = -1;
-
-		vertexID= Vertex.getInternalVertexID();
+		//int vertexData = -1;
+		
+		/*
+		 * vertexID internal vertex Identifier (integer auto increment)
+		 * Example with vertexID vertexToEdges[0] = A:1
+		 * vertexDataArray[0] = A;
+		 * vertexDataArray[1] = 1;
+		 */
+		
 		try {
-			vertexData = Integer.parseInt(vertexToEdges[0]);
+			String[] vertexDataArray=vertexToEdges[0].split(",");
+			
+			if (vertexDataArray.length==2){
+				
+				vertexID= Integer.parseInt(vertexDataArray[1]);
+				
+				vertexData = Integer.parseInt(vertexDataArray[0]);
+			}else{
+				vertexID= Vertex.getInternalVertexID();
+				
+				vertexData = Integer.parseInt(vertexToEdges[0]);
+				
+			}
 
 		} catch (NumberFormatException e) {
-			throw new IllegalInputException(adjacencyListRecord);
+			throw new IllegalInputException("Assign vertexID " + adjacencyListRecord);
 		}
 
 		if (vertexID < 0) {
-			throw new IllegalInputException(adjacencyListRecord);
+			throw new IllegalInputException("Negative vertex ID" + adjacencyListRecord);
 		}
 
-		this.setVertexID(vertexID);
+		this.setVertexData(vertexData);
 		this.setValue(JPregelConstants.INFINITY);
 
 		/*
@@ -207,7 +227,7 @@ public abstract class Vertex implements Serializable {
 	 */
 	@Override
 	public String toString() {
-		String str = this.getVertexID() + vertexToEdgesSep;
+		String str = this.getVertexData()+","+this.getVertexID() + vertexToEdgesSep;
 
 		boolean firstItemCrossed = false;
 		for (Edge e : outgoingEdges) {

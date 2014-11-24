@@ -121,10 +121,8 @@ public class Worker implements Runnable {
 				+ partitionNumers);
 		DataLocator aDataLocator = DataLocator.getDataLocator(partitionSize);
 		for (Integer partitionNumber : partitionNumers) {
-			System.out.println("DataLocator searching for partition " + partitionNumber);
 			String partitionFile = aDataLocator
 					.getPartitionFile(partitionNumber);
-			System.out.println("GraphParition partition " + partitionNumber + " storage in file "+partitionFile);
 			GraphPartition aGraphPartition = new GraphPartition(
 					partitionNumber, partitionFile, this.vertexClassName, this,
 					aDataLocator);
@@ -147,11 +145,10 @@ public class Worker implements Runnable {
 			synchronized(this){
 			try {
 				while(this.getState()!=WorkerState.EXECUTE){
-					System.out.println("Not in execute state " + this.getId());
 					wait();
 				}
 				logger.info("Executing");
-				System.out.println("Executing " + this.getId());
+				
 				for (GraphPartition gPartition : this.listOfPartitions) {
 					if (this.getState() == WorkerState.EXECUTE) {
 						for (Vertex v : gPartition.getVertices()) {
@@ -177,7 +174,6 @@ public class Worker implements Runnable {
 					}
 
 				}
-				System.out.println("End Execution " + this.getId());
 				this.setState(WorkerState.DONE);
 				this.mgr.endJob(this.getId());
 				} catch (InterruptedException e1) {

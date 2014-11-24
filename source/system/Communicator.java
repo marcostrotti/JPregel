@@ -210,17 +210,17 @@ public class Communicator /*implements Runnable */{
 	public void sendVertexMessages() throws IOException, DataNotFoundException,
 		NotBoundException, RemoteException, UnknownHostException {
 		logger.info("cleaning spooler queues");
-		System.out.println("cleaning spooler queues");
+		
 		clearSpoolerQueues();
 		logger.info("populating spooler queues");
-		System.out.println("populating spooler queues");
+		
 		populateSpoolerQueues();
 		logger.info("send messages queues");
-		System.out.println("send messages queues");
+		
 		sendMessages();
 		//stopWorkers();
 		logger.info("Ending superstep");
-		System.out.println("Ending superstep");
+		
 		//this.wkrMgr.endSuperStep();
 		this.setState(CommunicatorState.STOP);
 	}
@@ -278,18 +278,11 @@ public class Communicator /*implements Runnable */{
 		Message msg;
 		Map<Integer, Pair<String, String>> partitionMap = this.aDataLocator
 				.readPartitionMap();
-		System.out.println("Before ");
+		
 		while (!msgQueue.isEmpty()) {
-			System.out.println("Afeter ");
+			
 			msg = msgQueue.remove();
 			int targetVertexID = msg.getDestVertexID();
-			 
-			/*int targetPartition = this.aDataLocator.getPartitionNumber(targetVertexID);
-			Pair<String, String> targetWkrMgrInfo = partitionMap
-					.get(targetPartition);*/
-			//TODO: vertexID should be Internal
-			System.out.println("Vertice " + targetVertexID );
-			System.out.println("Particion " +(int)targetVertexID / (partitionsPerWorkerManager*this.aDataLocator.getPartitionSize()));
 			Pair<String, String> targetWkrMgrInfo = partitionMap
 					.get((int)(targetVertexID / (partitionsPerWorkerManager*this.aDataLocator.getPartitionSize())));
 			String targetWkrMgrServiceName = targetWkrMgrInfo.getFirst();

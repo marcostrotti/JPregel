@@ -333,10 +333,10 @@ public class WorkerManagerImpl extends UnicastRemoteObject implements
 	public void setupSuperStep(int superStepNumber) throws RemoteException {
 		this.msgDistributed = false;
 		try {
-			System.out.println("Setup superstep sending messages");
+		
 			if (!this.justRecovered() || superStepNumber != JPregelConstants.FIRST_SUPERSTEP)
 				this.msgDistributed = distributeMessages();
-			System.out.println("End Setup superstep sending messages");
+		
 		} catch (IllegalMessageException e) {
 			logger.severe("Error sending messages "+ e.getMessage());
 			e.printStackTrace();
@@ -356,7 +356,6 @@ public class WorkerManagerImpl extends UnicastRemoteObject implements
 		this.isCheckPoint = isCheckPoint;
 
 		logger.info("Beginning superstep : " + superStepNumber);
-		System.out.println("Beginning superstep : " + superStepNumber);
 		// Distribute messages from last superstep
 		
 			this.setRecoveryStep(false);
@@ -451,7 +450,6 @@ public class WorkerManagerImpl extends UnicastRemoteObject implements
 
 	public void endSuperStep() throws RemoteException {
 		logger.info("Ending superstep");
-		System.out.println("Ending superstep " + this.getId());
 		master.endSuperStep(this.getId());
 	}
 
