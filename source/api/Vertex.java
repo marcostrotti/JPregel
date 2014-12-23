@@ -8,6 +8,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
@@ -147,16 +148,77 @@ public abstract class Vertex implements Serializable {
 			throws IllegalInputException {
 		this.gPartition = partition;
 		this.solutionFile = null;
-		initialize(adjacencyListRecord);
+		initializeFromParition(adjacencyListRecord);
 	}
 
+	public void initializeFromParition(String adjacencyListRecord)
+			throws IllegalInputException {
+		this.msgs = new LinkedList<Message>();
+		// Example : A->B:3,C:5,D:25
+
+		/*
+		 * Example : A->B:3,C:5,D:25 is split into vertexToEdges[0] = A
+		 * vertexToEdges[1] = B:3,C:5,D:25
+		 */
+		String[] vertexToEdges = adjacencyListRecord.split(vertexToEdgesSep);
+		
+		if (vertexToEdges.length != 2) {
+			throw new IllegalInputException("Error Paricionando "+adjacencyListRecord);
+		}
+		//int vertexData = -1;
+		
+		/*
+		 * vertexID internal vertex Identifier (integer auto increment)
+		 * Example with vertexID vertexToEdges[0] = A:1
+		 * vertexDataArray[0] = A;
+		 * vertexDataArray[1] = 1;
+		 */
+		
+		try {
+			String[] vertexDataArray=vertexToEdges[0].split(",");
+			
+			//if (vertexDataArray.length==2){
+				
+				vertexID= Integer.parseInt(vertexDataArray[1]);
+				
+				vertexData = Integer.parseInt(vertexDataArray[0]);
+		/*	}else{
+				vertexID= Vertex.getInternalVertexID();
+				
+				vertexData = Integer.parseInt(vertexToEdges[0]);
+				
+			}*/
+
+		} catch (NumberFormatException e) {
+			throw new IllegalInputException("Assign vertexID " + adjacencyListRecord);
+		}
+
+		if (vertexID < 0) {
+			throw new IllegalInputException("Negative vertex ID" + adjacencyListRecord);
+		}
+
+		this.setVertexData(vertexData);
+		this.setValue(JPregelConstants.INFINITY);
+
+		/*
+		 * Example : B:3,C:5,D:25 is split into outgoingVertices[0] = B:3
+		 * outgoingVertices[1] = C:5 outgoingVertices[2] = D:25
+		 */
+		String[] outgoingEdges = vertexToEdges[1].split(edgesSep);
+		this.outgoingEdges = new Vector<Edge>();
+		for (String edgeDetail : outgoingEdges) {
+			Edge e = new Edge(this.getVertexID(), edgeDetail);
+			this.outgoingEdges.add(e);
+		}
+	}
+	
 	/**
 	 * Initializes the vertex with the adjacency list record representing it
 	 * 
 	 * @param adjacencyListRecord
 	 * @throws IllegalInputException
 	 */
-	public void initialize(String adjacencyListRecord)
+	public void initialize(String adjacencyListRecord,HashMap<Integer,Integer> dataIDMap)
 			throws IllegalInputException {
 		this.msgs = new LinkedList<Message>();
 		// Example : A->B:3,C:5,D:25
@@ -188,9 +250,15 @@ public abstract class Vertex implements Serializable {
 				
 				vertexData = Integer.parseInt(vertexDataArray[0]);
 			}else{
-				vertexID= Vertex.getInternalVertexID();
-				
 				vertexData = Integer.parseInt(vertexToEdges[0]);
+				if (dataIDMap.containsKey(vertexData))
+					vertexID=dataIDMap.get(vertexData);
+				else{
+					vertexID= Vertex.getInternalVertexID();
+					dataIDMap.put(vertexData, vertexID);
+				}
+				
+				
 				
 			}
 
@@ -213,6 +281,15 @@ public abstract class Vertex implements Serializable {
 		this.outgoingEdges = new Vector<Edge>();
 		for (String edgeDetail : outgoingEdges) {
 			Edge e = new Edge(this.getVertexID(), edgeDetail);
+			//Set internal ID
+			if (dataIDMap.containsKey(e.getDestVertexID()))
+				e.setDestVertexID(dataIDMap.get(e.getDestVertexID()));
+			else{
+				int newID=Vertex.getInternalVertexID();
+				dataIDMap.put(e.getDestVertexID(),newID);
+				e.setDestVertexID(newID);
+			}
+				
 			this.outgoingEdges.add(e);
 		}
 	}

@@ -129,6 +129,11 @@ public class MasterImpl extends UnicastRemoteObject implements ManagerToMaster,
 						aWkrMgr = e.getValue();
 						aWkrMgr.isAlive();
 					}
+					try {
+						Thread.sleep(10000);
+					} catch (InterruptedException e1) {
+						e1.printStackTrace();
+					}
 				} catch (RemoteException e) {
 					this.logger
 							.severe("Worker manager : " + wkrMgrID + " died");
@@ -518,6 +523,7 @@ public class MasterImpl extends UnicastRemoteObject implements ManagerToMaster,
 			aWkrMgr.writeSolutions();
 		}*/
 		logger.info("Solutions storing");
+		System.out.println("Solutions storing");
 		//Storage solutions in master
 		List<Future<List<GraphPartition>>> list = new ArrayList<Future<List<GraphPartition>>>();
 	    ExecutorService executor = Executors.newFixedThreadPool(this.getWorkerMgrsCount());
@@ -540,6 +546,7 @@ public class MasterImpl extends UnicastRemoteObject implements ManagerToMaster,
 				}
 			}
 		logger.info("End of the solutions storage");
+		System.out.println("End of the solutions storage");
 		} catch (InterruptedException e1) {
 			logger.severe("Error storing solutions "+e1.getMessage());
 			e1.printStackTrace();
@@ -704,6 +711,7 @@ public class MasterImpl extends UnicastRemoteObject implements ManagerToMaster,
 			}
 			
 			logger.info("Initialize Worker Manager " + thisWkrMgr.getId());
+			System.out.println("Size "+this.gp.getPartitionSize()+" perWkm "+ (int)(this.gp.getNumberOfPartitions() / this.getWorkerMgrsCount()));
 			thisWkrMgr.initialize(graphParitions, this.getWorkerMgrThreads(), 
 					this.gp.getPartitionSize(), this.gp.getNumVertices(), partitionWkrMgrMap, (int)(this.gp.getNumberOfPartitions() / this.getWorkerMgrsCount()));
 			
@@ -713,6 +721,7 @@ public class MasterImpl extends UnicastRemoteObject implements ManagerToMaster,
 			logger.info("End initialize Worker Manager " + thisWkrMgr.getId());
 			index++;
 		}
+		this.gp.clearPartitions();
 	}
 
 	private List<List<Integer>> assignPartitions() throws NoResourcesException,
@@ -769,8 +778,10 @@ public class MasterImpl extends UnicastRemoteObject implements ManagerToMaster,
 		// this fellow shouldn't have returned before .. checking just in
 		// case there is a double endSuperStep() done by a worker manager
 		// during a stopSuperStep() call
+		
 		if (!this.returnedManagers.contains(wkrMgrId)
 				&& superStep == this.getSuperStep()) {
+			System.out.println("End SuperStep " + superStep);
 			// Checking if any managers are yet to report completion
 			if (this.getParticipatingMgrs() > 0) {
 

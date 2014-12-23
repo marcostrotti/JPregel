@@ -96,7 +96,6 @@ public class DataLocator {
 	 */
 	public static DataLocator getDataLocator(int partitionSize)
 			throws IOException {
-		System.out.println("DataLocator host name "+InetAddress.getLocalHost().getHostName());
 		if (aDataLocator == null) {
 			aDataLocator = new DataLocator(partitionSize);
 		}

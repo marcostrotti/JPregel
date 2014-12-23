@@ -119,6 +119,8 @@
         <!-- run remote worker manager -->
         <java classname="system.WorkerManagerImpl" fork="true">
             <jvmarg value="-Djava.security.policy=policy/policy"/>
+        	<jvmarg value="-Xms512M"/>  
+        	<jvmarg value="-Xmx2048M"/>
             <arg value="${master}:${port}"/>
             <arg value="${vertex_class}"/>
             <classpath>
@@ -236,6 +238,8 @@
         <!-- run remote master -->
         <java classname="system.MasterImpl" fork="true">
             <jvmarg value="-Djava.security.policy=policy/policy"/>
+        	<jvmarg value="-Xms512M"/>  
+        	<jvmarg value="-Xmx2048M"/>
             <arg value="${vertex_class}"/>
             <arg value="${num_machines}"/>
             <classpath>

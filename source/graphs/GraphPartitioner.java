@@ -3,6 +3,7 @@ package graphs;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
 import java.util.logging.Logger;
@@ -94,7 +95,7 @@ public class GraphPartitioner {
 		int numThreads = master.getWorkerMgrThreads();
 
 		// Average no. of lines in a graph partition
-		this.setPartitionSize(numThreads * numWorkers);
+		this.setPartitionSize(100*numThreads * numWorkers);
 		// number of lines in the input graph
 		setNumVertices(this.countLines());
 
@@ -146,7 +147,7 @@ public class GraphPartitioner {
 				this.graphFile));
 		String line = null;
 		int thisPartitionSize = 0;
-		int vertexInternalIdentifier=0;
+		HashMap<Integer,Integer> vertexDataIDMap=new HashMap<Integer, Integer>();
 		while (true) {
 			thisPartitionSize = 0;
 			List<Vertex> listOfVertices = new Vector<Vertex>();
@@ -155,8 +156,7 @@ public class GraphPartitioner {
 				thisPartitionSize++;
 				Vertex newVertex = (Vertex) (Class.forName(vertexClassName)
 						.newInstance());
-				newVertex.initialize(line);
-				vertexInternalIdentifier++;
+				newVertex.initialize(line,vertexDataIDMap);
 				listOfVertices.add(newVertex);
 			}
 
@@ -177,6 +177,7 @@ public class GraphPartitioner {
 				break;
 			}
 		}
+		vertexDataIDMap=null;
 		buffRdr.close();
 		return listOfPartitions.size();
 	}
@@ -218,6 +219,10 @@ public class GraphPartitioner {
 	 */
 	public GraphPartition getPartition(int partitionID){
 		return this.listOfPartitions.get(partitionID); 
+	}
+	
+	public void clearPartitions(){
+		this.listOfPartitions.clear();
 	}
 	
 }

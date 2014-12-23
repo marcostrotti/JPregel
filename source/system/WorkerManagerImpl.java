@@ -356,6 +356,7 @@ public class WorkerManagerImpl extends UnicastRemoteObject implements
 		this.isCheckPoint = isCheckPoint;
 
 		logger.info("Beginning superstep : " + superStepNumber);
+		System.out.println("Beginning superstep : " + superStepNumber);
 		// Distribute messages from last superstep
 		
 			this.setRecoveryStep(false);
